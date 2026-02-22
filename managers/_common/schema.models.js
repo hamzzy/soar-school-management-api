@@ -102,4 +102,132 @@ module.exports = {
     bool: {
         type: 'Boolean',
     },
+    personName: {
+        path: 'name',
+        type: 'string',
+        length: { min: 2, max: 120 },
+    },
+    userEmail: {
+        path: 'email',
+        type: 'string',
+        length: { min: 5, max: 200 },
+        regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    },
+    schoolId: {
+        path: 'schoolId',
+        type: 'string',
+        length: 24,
+        custom: 'objectId',
+    },
+    classroomId: {
+        path: 'classroomId',
+        type: 'string',
+        length: 24,
+        custom: 'objectId',
+    },
+    studentId: {
+        path: 'studentId',
+        type: 'string',
+        length: 24,
+        custom: 'objectId',
+    },
+    schoolName: {
+        path: 'name',
+        type: 'string',
+        length: { min: 2, max: 200 },
+    },
+    schoolCode: {
+        path: 'code',
+        type: 'string',
+        length: { min: 2, max: 40 },
+    },
+    phoneText: {
+        path: 'contactPhone',
+        type: 'string',
+        length: { min: 5, max: 40 },
+    },
+    addressText: {
+        path: 'address',
+        type: 'string',
+        length: { min: 3, max: 250 },
+    },
+    classroomName: {
+        path: 'name',
+        type: 'string',
+        length: { min: 1, max: 120 },
+    },
+    gradeLevel: {
+        path: 'gradeLevel',
+        type: 'string',
+        length: { min: 1, max: 60 },
+    },
+    capacity: {
+        path: 'capacity',
+        type: 'number',
+    },
+    homeroomTeacher: {
+        path: 'homeroomTeacher',
+        type: 'string',
+        length: { min: 2, max: 120 },
+    },
+    statusFlag: {
+        path: 'status',
+        type: 'string',
+        oneOf: ['active', 'inactive'],
+    },
+    firstName: {
+        path: 'firstName',
+        type: 'string',
+        length: { min: 1, max: 120 },
+    },
+    lastName: {
+        path: 'lastName',
+        type: 'string',
+        length: { min: 1, max: 120 },
+    },
+    admissionNumber: {
+        path: 'admissionNumber',
+        type: 'string',
+        length: { min: 2, max: 80 },
+    },
+    dateOfBirth: {
+        path: 'dateOfBirth',
+        type: 'string',
+        length: 10,
+        custom: 'isoDate',
+    },
+    contactEmail: {
+        path: 'contactEmail',
+        type: 'string',
+        length: { min: 5, max: 200 },
+        regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    },
+    resourcesList: {
+        path: 'resources',
+        type: 'Array',
+        items: {
+            type: 'String',
+            length: { min: 1, max: 100 },
+        }
+    },
+    profileObj: {
+        path: 'profile',
+        type: 'Object',
+    },
+    targetSchoolId: {
+        path: 'targetSchoolId',
+        type: 'string',
+        length: 24,
+        custom: 'objectId',
+    },
+    targetClassroomId: {
+        path: 'targetClassroomId',
+        type: 'string',
+        length: 24,
+        custom: 'objectId',
+    },
+    expectedVersion: {
+        path: 'expectedVersion',
+        type: 'number',
+    },
 }
