@@ -2,19 +2,24 @@ const config                = require('./config/index.config.js');
 const Cortex                = require('ion-cortex');
 const ManagersLoader        = require('./loaders/ManagersLoader.js');
 const Aeon                  = require('aeon-machine');
+const logger                = require('./libs/logger');
 if(config.dotEnv.MONGO_URI){
     require('./connect/mongo')({ uri: config.dotEnv.MONGO_URI });
 }
 
 process.on('uncaughtException', err => {
-    console.log(`Uncaught Exception:`)
-    console.log(err, err.stack);
+    logger.error('process_uncaught_exception', {
+        error: err,
+    });
 
     process.exit(1)
 })
 
 process.on('unhandledRejection', (reason, promise) => {
-    console.log('Unhandled rejection at ', promise, `reason:`, reason);
+    logger.error('process_unhandled_rejection', {
+        reason,
+        promise: String(promise),
+    });
     process.exit(1)
 })
 

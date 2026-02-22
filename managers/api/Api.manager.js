@@ -1,4 +1,5 @@
 const getParamNames = require('./_common/getParamNames');
+const logger = require('../../libs/logger');
 /** 
  * scans all managers for exposed methods 
  * and makes them available through a handler middleware
@@ -107,13 +108,20 @@ module.exports = class ApiHandler {
     }
 
 
-    async _exec({targetModule, fnName, cb, data}){
+    async _exec({moduleName, targetModule, fnName, cb, data}){
         let result = {};
         
             try {
                 result = await targetModule[`${fnName}`](data);
             } catch (err){
-                console.log(`error`, err);
+                logger.error('api_execution_failed', {
+                    requestId: (data && data.__requestMeta && data.__requestMeta.requestId) || '',
+                    correlationId: (data && data.__requestMeta && data.__requestMeta.correlationId) || '',
+                    module: moduleName,
+                    fnName,
+                    errorCode: 'INTERNAL_EXECUTION_ERROR',
+                    error: err,
+                });
                 result.error = `${fnName} failed to execute`;
                 result.code = 500;
                 result.errorCode = 'INTERNAL_EXECUTION_ERROR';
@@ -157,7 +165,7 @@ module.exports = class ApiHandler {
                 ...body, 
                 ...results,
                 res,
-            }});
+            }, moduleName});
             if(!result)result={}
 
             const code = result.code;
@@ -174,9 +182,40 @@ module.exports = class ApiHandler {
             } else {
                 
                 if(result.errors){
+                    logger.warn('api_validation_failed', {
+                        requestId: (results && results.__requestMeta && results.__requestMeta.requestId) || '',
+                        correlationId: (results && results.__requestMeta && results.__requestMeta.correlationId) || '',
+                        module: moduleName,
+                        fnName,
+                        code: code || 422,
+                        errorCode: errorCode || 'VALIDATION_FAILED',
+                    });
                     return this.managers.responseDispatcher.dispatch(res, {ok: false, code: code || 422, errors: result.errors, errorCode: errorCode || 'VALIDATION_FAILED'});
                 } else if(result.error){
-                    return this.managers.responseDispatcher.dispatch(res, {ok: false, code: code || 400, message: result.error, errorCode: errorCode || ((code || 400) >= 500 ? 'INTERNAL_ERROR' : 'REQUEST_FAILED')});
+                    const responseCode = code || 400;
+                    const responseErrorCode = errorCode || (responseCode >= 500 ? 'INTERNAL_ERROR' : 'REQUEST_FAILED');
+                    if(responseCode >= 500){
+                        logger.error('api_request_failed', {
+                            requestId: (results && results.__requestMeta && results.__requestMeta.requestId) || '',
+                            correlationId: (results && results.__requestMeta && results.__requestMeta.correlationId) || '',
+                            module: moduleName,
+                            fnName,
+                            code: responseCode,
+                            errorCode: responseErrorCode,
+                            message: result.error,
+                        });
+                    } else {
+                        logger.warn('api_request_failed', {
+                            requestId: (results && results.__requestMeta && results.__requestMeta.requestId) || '',
+                            correlationId: (results && results.__requestMeta && results.__requestMeta.correlationId) || '',
+                            module: moduleName,
+                            fnName,
+                            code: responseCode,
+                            errorCode: responseErrorCode,
+                            message: result.error,
+                        });
+                    }
+                    return this.managers.responseDispatcher.dispatch(res, {ok: false, code: responseCode, message: result.error, errorCode: responseErrorCode});
                 } else {
                     return this.managers.responseDispatcher.dispatch(res, {ok:true, code: code || 200, data: result});
                 }

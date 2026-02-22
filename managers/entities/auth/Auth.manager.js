@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const { nanoid } = require('nanoid');
 const accessPolicy = require('../../_common/access.policy');
+const logger = require('../../../libs/logger');
 
 module.exports = class Auth {
   constructor({ validators, managers, repositories }) {
@@ -163,6 +164,13 @@ module.exports = class Auth {
         res.setHeader('Retry-After', loginAllow.retryAfterSeconds);
       }
       this.observability.inc('loginFailures');
+      logger.warn('auth_login_rate_limited', {
+        requestId: requestMeta.requestId,
+        correlationId: requestMeta.correlationId,
+        email: String(email || '').toLowerCase(),
+        ip: requestMeta.ip,
+        errorCode: 'AUTH_LOGIN_RATE_LIMITED',
+      });
       return {
         code: 429,
         error: 'too many failed login attempts, retry later',
@@ -174,6 +182,14 @@ module.exports = class Auth {
     if (!user) {
       this.security.registerLoginResult({ email, ip: requestMeta.ip, success: false });
       this.observability.inc('loginFailures');
+      logger.warn('auth_login_failed', {
+        requestId: requestMeta.requestId,
+        correlationId: requestMeta.correlationId,
+        email: String(email || '').toLowerCase(),
+        ip: requestMeta.ip,
+        reason: 'user_not_found',
+        errorCode: 'AUTH_INVALID_CREDENTIALS',
+      });
       return { code: 401, error: 'invalid credentials', errorCode: 'AUTH_INVALID_CREDENTIALS' };
     }
 
@@ -181,10 +197,30 @@ module.exports = class Auth {
     if (!matched) {
       this.security.registerLoginResult({ email, ip: requestMeta.ip, success: false });
       this.observability.inc('loginFailures');
+      logger.warn('auth_login_failed', {
+        requestId: requestMeta.requestId,
+        correlationId: requestMeta.correlationId,
+        email: String(email || '').toLowerCase(),
+        ip: requestMeta.ip,
+        userId: String(user._id),
+        role: user.role,
+        reason: 'password_mismatch',
+        errorCode: 'AUTH_INVALID_CREDENTIALS',
+      });
       return { code: 401, error: 'invalid credentials', errorCode: 'AUTH_INVALID_CREDENTIALS' };
     }
 
     if (user.status !== 'active') {
+      logger.warn('auth_login_failed', {
+        requestId: requestMeta.requestId,
+        correlationId: requestMeta.correlationId,
+        email: String(email || '').toLowerCase(),
+        ip: requestMeta.ip,
+        userId: String(user._id),
+        role: user.role,
+        reason: 'inactive_user',
+        errorCode: 'AUTH_USER_INACTIVE',
+      });
       return { code: 403, error: 'user is inactive', errorCode: 'AUTH_USER_INACTIVE' };
     }
 
@@ -200,6 +236,15 @@ module.exports = class Auth {
         schoolId: user.school ? String(user.school) : null,
       },
       requestMeta,
+    });
+
+    logger.info('auth_login_success', {
+      requestId: requestMeta.requestId,
+      correlationId: requestMeta.correlationId,
+      userId: String(user._id),
+      role: user.role,
+      schoolId: user.school ? String(user.school) : null,
+      ip: requestMeta.ip,
     });
 
     return {

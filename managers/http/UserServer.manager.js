@@ -45,6 +45,16 @@ module.exports = class UserServer {
 
     res.setHeader('x-request-id', req.requestId);
     res.setHeader('x-correlation-id', req.correlationId);
+
+    logger.info('http_request_started', {
+      requestId: req.requestId,
+      correlationId: req.correlationId,
+      method: req.method,
+      path: req.originalUrl || req.url,
+      ip: req.clientIp,
+      userAgent: req.headers['user-agent'] || '',
+    });
+
     next();
   }
 
@@ -77,6 +87,12 @@ module.exports = class UserServer {
     const startedAt = Date.now();
     this.observability.inc('requestsTotal');
 
+    const originalSend = res.send.bind(res);
+    res.send = (body) => {
+      res.locals.responseBody = body;
+      return originalSend(body);
+    };
+
     res.on('finish', () => {
       const durationMs = Date.now() - startedAt;
       this.observability.observeLatency(durationMs);
@@ -85,18 +101,40 @@ module.exports = class UserServer {
       else if (res.statusCode >= 400) this.observability.inc('responses4xx');
       else this.observability.inc('responses2xx');
 
-      logger.info('http_request', {
+      let response = null;
+      if (res.locals.responseBody && typeof res.locals.responseBody === 'object') {
+        response = res.locals.responseBody;
+      } else if (typeof res.locals.responseBody === 'string') {
+        try {
+          response = JSON.parse(res.locals.responseBody);
+        } catch (err) {
+          response = null;
+        }
+      }
+
+      const payload = {
         requestId: req.requestId,
         correlationId: req.correlationId,
         method: req.method,
         path: req.originalUrl,
         statusCode: res.statusCode,
         durationMs,
-        actorId: req.auth ? req.auth.userId : '',
-        actorRole: req.auth ? req.auth.role : '',
-        schoolId: req.auth ? req.auth.schoolId : '',
+        actorId: req.auth ? req.auth.userId : (response && response.actorId) || '',
+        actorRole: req.auth ? req.auth.role : (response && response.actorRole) || '',
+        schoolId: req.auth ? req.auth.schoolId : (response && response.schoolId) || '',
         ip: req.clientIp,
-      });
+        ok: response && typeof response.ok === 'boolean' ? response.ok : undefined,
+        errorCode: response && response.errorCode ? response.errorCode : '',
+        message: response && response.message ? response.message : '',
+      };
+
+      if (res.statusCode >= 500) {
+        logger.error('http_request_completed', payload);
+      } else if (res.statusCode >= 400) {
+        logger.warn('http_request_completed', payload);
+      } else {
+        logger.info('http_request_completed', payload);
+      }
     });
 
     next();
@@ -219,7 +257,11 @@ module.exports = class UserServer {
       logger.error('unhandled_http_error', {
         requestId: req.requestId || '',
         correlationId: req.correlationId || '',
+        method: req.method || '',
+        path: req.originalUrl || req.url || '',
+        ip: req.clientIp || '',
         message: err && err.message ? err.message : 'unknown_error',
+        stack: err && err.stack ? err.stack : '',
       });
       this.responseDispatcher.dispatch(res, {
         ok: false,

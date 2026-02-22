@@ -84,6 +84,7 @@ http://localhost:5111
 2. Login:
 - `POST /api/v1/auth/login`
 - Returns `accessToken` + `refreshToken` (and `token` alias for backward compatibility)
+- Supported roles: `superadmin` and `school_admin` (active users only)
 
 3. Authenticated requests:
 - Preferred header: `Authorization: Bearer <accessToken>`
@@ -235,7 +236,8 @@ Common status codes:
 - `GET /health/live`: liveness probe
 - `GET /health/ready`: readiness probe (includes Mongo connectivity)
 - `GET /metrics`: JSON metrics snapshot (request counts, status classes, auth failures, latency)
-- Structured JSON logs include `requestId`, `correlationId`, actor context, and status
+- Structured JSON logs include `requestId`, `correlationId`, actor context, status, errorCode, and latency
+- Logs are emitted for request start/completion, auth success/failure, API execution failures, and unhandled HTTP/process errors
 
 ## Database Schema Design
 <img src="./db-er.svg">
