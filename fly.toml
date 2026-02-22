@@ -1,53 +1,23 @@
-app = "axion-school-api"
-primary_region = "iad"
-kill_signal = "SIGINT"
-kill_timeout = "5s"
+# fly.toml app configuration file generated for soar-school-management-api on 2026-02-22T11:59:38Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'soar-school-management-api'
+primary_region = 'ams'
 
 [build]
-  dockerfile = "Dockerfile"
 
-[env]
-  ENV = "production"
-  SERVICE_NAME = "axion"
-  USER_PORT = "8080"
-  ACCESS_TOKEN_TTL = "15m"
-  REFRESH_TOKEN_TTL = "30d"
-  RATE_LIMIT_WINDOW_MS = "60000"
-  RATE_LIMIT_MAX = "120"
-  LOGIN_ATTEMPT_WINDOW_MS = "900000"
-  LOGIN_ATTEMPT_MAX = "5"
-  LOGIN_LOCK_MS = "900000"
-
-[[services]]
-  protocol = "tcp"
+[http_service]
   internal_port = 8080
-  processes = ["app"]
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
 
-  [services.concurrency]
-    type = "connections"
-    hard_limit = 200
-    soft_limit = 150
-
-  [[services.ports]]
-    handlers = ["http"]
-    port = 80
-
-  [[services.ports]]
-    handlers = ["tls", "http"]
-    port = 443
-
-  [[services.http_checks]]
-    interval = "15s"
-    timeout = "2s"
-    grace_period = "30s"
-    method = "get"
-    path = "/health/live"
-    protocol = "http"
-
-  [[services.http_checks]]
-    interval = "20s"
-    timeout = "3s"
-    grace_period = "30s"
-    method = "get"
-    path = "/health/ready"
-    protocol = "http"
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 512
