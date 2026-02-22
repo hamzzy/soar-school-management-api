@@ -115,6 +115,8 @@ module.exports = class ApiHandler {
             } catch (err){
                 console.log(`error`, err);
                 result.error = `${fnName} failed to execute`;
+                result.code = 500;
+                result.errorCode = 'INTERNAL_EXECUTION_ERROR';
             }
     
         if(cb)cb(result);
@@ -131,15 +133,15 @@ module.exports = class ApiHandler {
         let moduleMatrix  = this.methodMatrix[moduleName];
 
         /** validate module */
-        if(!moduleMatrix) return this.managers.responseDispatcher.dispatch(res, {ok: false, message: `module ${moduleName} not found`});
+        if(!moduleMatrix) return this.managers.responseDispatcher.dispatch(res, {ok: false, code: 404, message: `module ${moduleName} not found`, errorCode: 'API_MODULE_NOT_FOUND'});
         
         /** validate method */
         if(!moduleMatrix[method]){
-            return this.managers.responseDispatcher.dispatch(res, {ok: false, message: `unsupported method ${method} for ${moduleName}`});
+            return this.managers.responseDispatcher.dispatch(res, {ok: false, code: 405, message: `unsupported method ${method} for ${moduleName}`, errorCode: 'API_METHOD_NOT_ALLOWED'});
         }
 
         if(!moduleMatrix[method].includes(fnName)){
-            return this.managers.responseDispatcher.dispatch(res, {ok: false, message: `unable to find function ${fnName} with method ${method}`});
+            return this.managers.responseDispatcher.dispatch(res, {ok: false, code: 404, message: `unable to find function ${fnName} with method ${method}`, errorCode: 'API_FUNCTION_NOT_FOUND'});
         }
 
         // console.log(`${moduleName}.${fnName}`);
@@ -158,16 +160,25 @@ module.exports = class ApiHandler {
             }});
             if(!result)result={}
 
+            const code = result.code;
+            const errorCode = result.errorCode;
+            if(result.code !== undefined){
+                delete result.code;
+            }
+            if(result.errorCode !== undefined){
+                delete result.errorCode;
+            }
+
             if(result.selfHandleResponse){
                 // do nothing if response handeled
             } else {
                 
                 if(result.errors){
-                    return this.managers.responseDispatcher.dispatch(res, {ok: false, errors: result.errors});
+                    return this.managers.responseDispatcher.dispatch(res, {ok: false, code: code || 422, errors: result.errors, errorCode: errorCode || 'VALIDATION_FAILED'});
                 } else if(result.error){
-                    return this.managers.responseDispatcher.dispatch(res, {ok: false, message: result.error});
+                    return this.managers.responseDispatcher.dispatch(res, {ok: false, code: code || 400, message: result.error, errorCode: errorCode || ((code || 400) >= 500 ? 'INTERNAL_ERROR' : 'REQUEST_FAILED')});
                 } else {
-                    return this.managers.responseDispatcher.dispatch(res, {ok:true, data: result});
+                    return this.managers.responseDispatcher.dispatch(res, {ok:true, code: code || 200, data: result});
                 }
             }
         }});
