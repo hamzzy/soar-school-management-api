@@ -45,10 +45,11 @@ jobs:
       - name: Setup Flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Skip deploy when token is missing
+      - name: Require Fly deploy token
         if: env.FLY_API_TOKEN == ''
-        run: echo "FLY_API_TOKEN is not configured. Skipping Fly deploy."
+        run: |
+          echo "FLY_API_TOKEN is not configured."
+          exit 1
 
       - name: Deploy to Fly.io
-        if: env.FLY_API_TOKEN != ''
         run: flyctl deploy --remote-only --config fly.toml
