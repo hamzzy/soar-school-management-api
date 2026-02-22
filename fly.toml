@@ -1,5 +1,5 @@
-app = "axion-school-api"
-primary_region = "iad"
+app = "soar-school-management-api"
+primary_region = "ams"
 kill_signal = "SIGINT"
 kill_timeout = "5s"
 
