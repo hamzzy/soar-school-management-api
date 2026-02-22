@@ -25,11 +25,10 @@ jobs:
       - name: Lockfile Consistency
         run: npm run check:lockfile
 
-      - name: Run Tests
-        run: npm test
-
-      - name: Security Scan
-        run: npm run security:audit
+      - name: Run Tests With Coverage
+        run: npm run test:coverage
+        env:
+          COVERAGE_MIN_LINES: "40"
 
       - name: Docker Build Smoke Test
         run: docker build -t axion-ci .

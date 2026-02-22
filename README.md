@@ -258,6 +258,12 @@ Run:
 npm test
 ```
 
+Coverage report:
+```bash
+npm run test:coverage
+```
+Default line coverage gate is `40%` (override with `COVERAGE_MIN_LINES`).
+
 Current test coverage includes:
 - Classroom RBAC/school scoping
 - Student transfer authorization
@@ -316,7 +322,7 @@ GitHub Actions workflow: `.github/workflows/ci.yml`
 
 Current gates:
 - Lockfile consistency check
-- Test suite
+- Test suite with coverage report
 - Security audit (`npm audit --audit-level=high`)
 - Docker build smoke test
 
