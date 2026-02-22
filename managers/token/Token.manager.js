@@ -7,8 +7,9 @@ module.exports = class TokenManager {
 
     constructor({config}){
         this.config              = config;
-        this.longTokenExpiresIn  = '3y';
-        this.shortTokenExpiresIn = '1y';
+        this.longTokenExpiresIn  = this.config.dotEnv.LONG_TOKEN_TTL || '30d';
+        this.shortTokenExpiresIn = this.config.dotEnv.ACCESS_TOKEN_TTL || '15m';
+        this.refreshTokenExpiresIn = this.config.dotEnv.REFRESH_TOKEN_TTL || '30d';
 
         this.httpExposed         = ['v1_createShortToken'];
     }
@@ -30,18 +31,38 @@ module.exports = class TokenManager {
             { 
                 userKey, 
                 userId,
+                typ: 'long',
             }, 
             this.config.dotEnv.LONG_TOKEN_SECRET, 
             {expiresIn: this.longTokenExpiresIn
         })
     }
 
-    genShortToken({userId, userKey, sessionId, deviceId}){
+    genAccessToken({userId, userKey, sessionId, deviceId, role, schoolId}){
         return jwt.sign(
-            { userKey, userId, sessionId, deviceId}, 
+            { userKey, userId, sessionId, deviceId, role, schoolId, typ: 'access' }, 
             this.config.dotEnv.SHORT_TOKEN_SECRET, 
             {expiresIn: this.shortTokenExpiresIn
         })
+    }
+
+    genRefreshToken({userId, tokenId, familyId, sessionId, deviceId}){
+        return jwt.sign(
+            {
+                userId,
+                tokenId,
+                familyId,
+                sessionId,
+                deviceId,
+                typ: 'refresh',
+            },
+            this.config.dotEnv.REFRESH_TOKEN_SECRET || this.config.dotEnv.LONG_TOKEN_SECRET,
+            { expiresIn: this.refreshTokenExpiresIn }
+        );
+    }
+
+    genShortToken(args){
+        return this.genAccessToken(args);
     }
 
     _verifyToken({token, secret}){
@@ -55,8 +76,17 @@ module.exports = class TokenManager {
     verifyLongToken({token}){
         return this._verifyToken({token, secret: this.config.dotEnv.LONG_TOKEN_SECRET,})
     }
-    verifyShortToken({token}){
+    verifyAccessToken({token}){
         return this._verifyToken({token, secret: this.config.dotEnv.SHORT_TOKEN_SECRET,})
+    }
+    verifyShortToken({token}){
+        return this.verifyAccessToken({ token });
+    }
+    verifyRefreshToken({ token }){
+        return this._verifyToken({
+            token,
+            secret: this.config.dotEnv.REFRESH_TOKEN_SECRET || this.config.dotEnv.LONG_TOKEN_SECRET,
+        })
     }
 
 

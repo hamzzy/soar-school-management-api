@@ -23,9 +23,19 @@ const MONGO_URI                        = process.env.MONGO_URI || `mongodb://loc
 const config                           = require(`./envs/${ENV}.js`);
 const LONG_TOKEN_SECRET                = process.env.LONG_TOKEN_SECRET || null;
 const SHORT_TOKEN_SECRET               = process.env.SHORT_TOKEN_SECRET || null;
+const REFRESH_TOKEN_SECRET             = process.env.REFRESH_TOKEN_SECRET || null;
+const ACCESS_TOKEN_TTL                 = process.env.ACCESS_TOKEN_TTL || '15m';
+const REFRESH_TOKEN_TTL                = process.env.REFRESH_TOKEN_TTL || '30d';
+const LONG_TOKEN_TTL                   = process.env.LONG_TOKEN_TTL || '30d';
 const NACL_SECRET                      = process.env.NACL_SECRET || null;
+const RATE_LIMIT_WINDOW_MS             = process.env.RATE_LIMIT_WINDOW_MS || 60000;
+const RATE_LIMIT_MAX                   = process.env.RATE_LIMIT_MAX || 120;
+const LOGIN_ATTEMPT_WINDOW_MS          = process.env.LOGIN_ATTEMPT_WINDOW_MS || (15 * 60 * 1000);
+const LOGIN_ATTEMPT_MAX                = process.env.LOGIN_ATTEMPT_MAX || 5;
+const LOGIN_LOCK_MS                    = process.env.LOGIN_LOCK_MS || (15 * 60 * 1000);
+const CORS_ORIGINS                     = process.env.CORS_ORIGINS || '';
 
-if(!LONG_TOKEN_SECRET || !SHORT_TOKEN_SECRET || !NACL_SECRET) {
+if(!LONG_TOKEN_SECRET || !SHORT_TOKEN_SECRET || !REFRESH_TOKEN_SECRET || !NACL_SECRET) {
     throw Error('missing .env variables check index.config');
 }
 
@@ -45,6 +55,16 @@ config.dotEnv = {
     ADMIN_URL,
     LONG_TOKEN_SECRET,
     SHORT_TOKEN_SECRET,
+    REFRESH_TOKEN_SECRET,
+    ACCESS_TOKEN_TTL,
+    REFRESH_TOKEN_TTL,
+    LONG_TOKEN_TTL,
+    RATE_LIMIT_WINDOW_MS,
+    RATE_LIMIT_MAX,
+    LOGIN_ATTEMPT_WINDOW_MS,
+    LOGIN_ATTEMPT_MAX,
+    LOGIN_LOCK_MS,
+    CORS_ORIGINS,
 };
 
 
