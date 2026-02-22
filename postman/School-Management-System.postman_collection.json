@@ -1,0 +1,895 @@
+{
+  "info": {
+    "name": "School Management System API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Collection for auth, schools, classrooms, students with RBAC flows."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5111"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "schoolId",
+      "value": ""
+    },
+    {
+      "key": "classroomId",
+      "value": ""
+    },
+    {
+      "key": "studentId",
+      "value": ""
+    },
+    {
+      "key": "superadminEmail",
+      "value": "superadmin@school.local"
+    },
+    {
+      "key": "superadminPassword",
+      "value": "SuperAdmin123!"
+    },
+    {
+      "key": "schoolAdminEmail",
+      "value": "admin.one@school.local"
+    },
+    {
+      "key": "schoolAdminPassword",
+      "value": "SchoolAdmin123!"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Bootstrap Superadmin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"System Superadmin\",\n  \"email\": \"{{superadminEmail}}\",\n  \"password\": \"{{superadminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/bootstrapSuperadmin",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "bootstrapSuperadmin"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  if (res && res.data && res.data.token) {",
+                  "    pm.collectionVariables.set('token', res.data.token);",
+                  "    if (res && res.data && res.data.refreshToken) {",
+                  "      pm.collectionVariables.set('refreshToken', res.data.refreshToken);",
+                  "    }",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{superadminEmail}}\",\n  \"password\": \"{{superadminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.data && res.data.token) {",
+                  "  pm.collectionVariables.set('token', res.data.token);",
+                  "  if (res && res.data && res.data.refreshToken) {",
+                  "    pm.collectionVariables.set('refreshToken', res.data.refreshToken);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create School Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"School Admin One\",\n  \"email\": \"{{schoolAdminEmail}}\",\n  \"password\": \"{{schoolAdminPassword}}\",\n  \"schoolId\": \"{{schoolId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/createSchoolAdmin",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "createSchoolAdmin"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Refresh Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refreshSession",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refreshSession"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.data && res.data.token) {",
+                  "  pm.collectionVariables.set('token', res.data.token);",
+                  "}",
+                  "if (res && res.data && res.data.refreshToken) {",
+                  "  pm.collectionVariables.set('refreshToken', res.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Schools",
+      "item": [
+        {
+          "name": "Create School",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Green Valley High\",\n  \"code\": \"GVH\",\n  \"address\": \"Main St\",\n  \"contactEmail\": \"admin@gvh.edu\",\n  \"contactPhone\": \"+1-555-000\",\n  \"profile\": {\n    \"principal\": \"Jane Doe\"\n  },\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/school/createSchool",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "school",
+                "createSchool"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.data && res.data.school && res.data.school.id) {",
+                  "  pm.collectionVariables.set('schoolId', res.data.school.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Schools",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/school/listSchools",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "school",
+                "listSchools"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get School By Id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/school/getSchoolById?schoolId={{schoolId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "school",
+                "getSchoolById"
+              ],
+              "query": [
+                {
+                  "key": "schoolId",
+                  "value": "{{schoolId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update School",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schoolId\": \"{{schoolId}}\",\n  \"name\": \"Green Valley High Updated\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/school/updateSchool",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "school",
+                "updateSchool"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get School Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/school/getSchoolProfile?schoolId={{schoolId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "school",
+                "getSchoolProfile"
+              ],
+              "query": [
+                {
+                  "key": "schoolId",
+                  "value": "{{schoolId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update School Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schoolId\": \"{{schoolId}}\",\n  \"profile\": {\n    \"principal\": \"Jane Doe\",\n    \"motto\": \"Learn and Lead\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/school/updateSchoolProfile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "school",
+                "updateSchoolProfile"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Classrooms",
+      "item": [
+        {
+          "name": "Create Classroom",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schoolId\": \"{{schoolId}}\",\n  \"name\": \"Grade 6 - A\",\n  \"gradeLevel\": \"Grade 6\",\n  \"capacity\": 30,\n  \"resources\": [\"projector\", \"smartboard\"],\n  \"homeroomTeacher\": \"Mr. Smith\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/classroom/createClassroom",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "classroom",
+                "createClassroom"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.data && res.data.classroom && res.data.classroom.id) {",
+                  "  pm.collectionVariables.set('classroomId', res.data.classroom.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Classrooms",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/classroom/listClassrooms?schoolId={{schoolId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "classroom",
+                "listClassrooms"
+              ],
+              "query": [
+                {
+                  "key": "schoolId",
+                  "value": "{{schoolId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Classroom By Id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/classroom/getClassroomById?classroomId={{classroomId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "classroom",
+                "getClassroomById"
+              ],
+              "query": [
+                {
+                  "key": "classroomId",
+                  "value": "{{classroomId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Classroom",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classroomId\": \"{{classroomId}}\",\n  \"capacity\": 32,\n  \"resources\": [\"projector\", \"smartboard\", \"lab-kits\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/classroom/updateClassroom",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "classroom",
+                "updateClassroom"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Students",
+      "item": [
+        {
+          "name": "Create Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schoolId\": \"{{schoolId}}\",\n  \"classroomId\": \"{{classroomId}}\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"admissionNumber\": \"A-2026-001\",\n  \"email\": \"john.doe@student.edu\",\n  \"dateOfBirth\": \"2012-02-10\",\n  \"profile\": {\n    \"guardian\": \"Jane Doe\"\n  },\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/student/createStudent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "student",
+                "createStudent"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.data && res.data.student && res.data.student.id) {",
+                  "  pm.collectionVariables.set('studentId', res.data.student.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Students",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/student/listStudents?schoolId={{schoolId}}&classroomId={{classroomId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "student",
+                "listStudents"
+              ],
+              "query": [
+                {
+                  "key": "schoolId",
+                  "value": "{{schoolId}}"
+                },
+                {
+                  "key": "classroomId",
+                  "value": "{{classroomId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Student By Id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/student/getStudentById?studentId={{studentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "student",
+                "getStudentById"
+              ],
+              "query": [
+                {
+                  "key": "studentId",
+                  "value": "{{studentId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"firstName\": \"John Updated\",\n  \"profile\": {\n    \"guardian\": \"Jane Doe\",\n    \"medical\": \"none\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/student/updateStudent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "student",
+                "updateStudent"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Transfer Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"targetSchoolId\": \"{{schoolId}}\",\n  \"targetClassroomId\": \"{{classroomId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/student/transferStudent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "student",
+                "transferStudent"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/student/deleteStudent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "student",
+                "deleteStudent"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cleanup",
+      "item": [
+        {
+          "name": "Delete Classroom",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classroomId\": \"{{classroomId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/classroom/deleteClassroom",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "classroom",
+                "deleteClassroom"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete School",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schoolId\": \"{{schoolId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/school/deleteSchool",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "school",
+                "deleteSchool"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
