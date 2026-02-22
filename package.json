@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "node --test tests/**/*.test.js",
+    "test": "node --test",
     "check:lockfile": "node scripts/check-lockfile.js",
     "security:audit": "npm audit --audit-level=high",
     "docker:build": "docker build -t axion .",
