@@ -108,6 +108,17 @@ Backward-compatible legacy routes are still available:
 - `POST /api/:moduleName/:fnName`
 - `GET /api/:moduleName/:fnName`
 
+## OpenAPI / Swagger
+- OpenAPI JSON: `GET /openapi.json`
+- OpenAPI JSON (API-prefixed alias): `GET /api/openapi.json`
+- Swagger UI (preferred): `GET /api/doc`
+- Swagger UI (aliases): `GET /api/docs`, `GET /docs`
+
+The OpenAPI spec includes:
+- JWT bearer auth (`Authorization: Bearer <token>`)
+- Legacy token header auth (`token: <token>`) for backward compatibility
+- Health, auth, school, classroom, and student endpoints under `/api/v1/...`
+
 ### Auth
 - `POST /api/v1/auth/bootstrapSuperadmin`
   - body: `{ "name", "email", "password" }`
@@ -255,6 +266,8 @@ Optimistic concurrency:
 - For safe update semantics, pass `expectedVersion` in update payloads.
 
 ## Tests
+Test runner: `Jest`
+
 Run:
 ```bash
 npm test
@@ -264,7 +277,7 @@ Coverage report:
 ```bash
 npm run test:coverage
 ```
-Default line coverage gate is `40%` (override with `COVERAGE_MIN_LINES`).
+Coverage is enforced by Jest global threshold (line coverage `>= 40%`).
 
 Current test coverage includes:
 - Classroom RBAC/school scoping
@@ -325,8 +338,11 @@ GitHub Actions workflow: `.github/workflows/ci.yml`
 Current gates:
 - Lockfile consistency check
 - Test suite with coverage report
-- Security audit (`npm audit --audit-level=high`)
 - Docker build smoke test
+- Automatic Fly.io deploy on `main` (if `FLY_API_TOKEN` secret is configured)
+
+Required GitHub Actions secret for deploy:
+- `FLY_API_TOKEN`
 
 ## Fly.io Deployment
 Files:

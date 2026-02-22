@@ -1,19 +1,6 @@
-const test = require('node:test');
+const { test } = require('@jest/globals');
 const assert = require('node:assert/strict');
-const Module = require('module');
-
-const originalLoad = Module._load;
-Module._load = function patchedLoad(request, parent, isMain) {
-  if (request === 'bcrypt') {
-    return {
-      hash: async (value) => `hashed:${value}`,
-      compare: async (candidate, hashed) => hashed === `hashed:${candidate}`,
-    };
-  }
-  return originalLoad.call(this, request, parent, isMain);
-};
 const AuthManager = require('../managers/entities/auth/Auth.manager');
-Module._load = originalLoad;
 
 const buildManager = async ({ role = 'school_admin', status = 'active' } = {}) => {
   const password = 'VerySecurePass#1';

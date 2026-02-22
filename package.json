@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "node --test",
-    "test:coverage": "node scripts/coverage-gate.js",
+    "test": "npx --yes jest@29.7.0 --runInBand",
+    "test:coverage": "npx --yes jest@29.7.0 --runInBand --coverage",
     "check:lockfile": "node scripts/check-lockfile.js",
     "security:audit": "npm audit --audit-level=high",
     "docker:build": "docker build -t axion .",

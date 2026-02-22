@@ -5,6 +5,8 @@ const requestIp = require('request-ip');
 const { nanoid } = require('nanoid');
 const mongoose = require('mongoose');
 const logger = require('../../libs/logger');
+const pjson = require('../../package.json');
+const { createOpenApiSpec } = require('../../docs/openapi.spec');
 
 let helmet = null;
 try {
@@ -204,6 +206,64 @@ module.exports = class UserServer {
     });
   }
 
+  _serverUrlFromReq(req) {
+    const forwardedProto = req.headers['x-forwarded-proto'];
+    const protocol = forwardedProto ? String(forwardedProto).split(',')[0].trim() : req.protocol;
+    const host = req.get('host');
+    if (!host) return '';
+    return `${protocol}://${host}`;
+  }
+
+  _openApiSpecMw(req, res) {
+    const spec = createOpenApiSpec({
+      serviceName: this.config.dotEnv.SERVICE_NAME || 'axion',
+      version: pjson.version || '0.1.0',
+      serverUrl: this._serverUrlFromReq(req),
+    });
+    return res.status(200).json(spec);
+  }
+
+  _swaggerUiMw(req, res) {
+    const csp = [
+      "default-src 'self' https://unpkg.com",
+      "style-src 'self' 'unsafe-inline' https://unpkg.com",
+      "script-src 'self' 'unsafe-inline' https://unpkg.com",
+      "img-src 'self' data: https://validator.swagger.io",
+      "font-src 'self' https://unpkg.com",
+      "connect-src 'self'",
+      "object-src 'none'",
+      "frame-ancestors 'none'",
+    ].join('; ');
+
+    res.setHeader('Content-Security-Policy', csp);
+    res.setHeader('Cache-Control', 'no-store');
+    res.status(200).type('html').send(`<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Swagger UI</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+  <style>
+    body { margin: 0; background: #fafafa; }
+    #swagger-ui { max-width: 1200px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    window.ui = SwaggerUIBundle({
+      url: '/openapi.json',
+      dom_id: '#swagger-ui',
+      persistAuthorization: true,
+      displayRequestDuration: true,
+    });
+  </script>
+</body>
+</html>`);
+  }
+
   run() {
     app.disable('x-powered-by');
 
@@ -241,6 +301,12 @@ module.exports = class UserServer {
     app.get('/health/live', this._healthLiveMw.bind(this));
     app.get('/health/ready', this._healthReadyMw.bind(this));
     app.get('/metrics', this._metricsMw.bind(this));
+    app.get('/openapi.json', this._openApiSpecMw.bind(this));
+    app.get('/api/openapi.json', this._openApiSpecMw.bind(this));
+    app.get('/api/doc', this._swaggerUiMw.bind(this));
+    app.get('/api/docs', this._swaggerUiMw.bind(this));
+    app.get('/docs', this._swaggerUiMw.bind(this));
+    app.get('/docs/', this._swaggerUiMw.bind(this));
 
     app.all('/api/v1/:moduleName/:fnName', this.userApi.mw);
     app.all('/api/:moduleName/:fnName', this.userApi.mw);
